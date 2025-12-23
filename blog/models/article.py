@@ -11,7 +11,7 @@ class Article(TimeStampedModel):
   title = models.CharField(max_length=MAX_LENGTH_TITLE, unique=True, db_index=True)
   slug = models.SlugField(max_length=MAX_LENGTH_SLUG, unique=True, db_index=True)
   content = models.TextField()
-  author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='articles')
+  author = models.ForeignKey(User, on_delete=models.RESTRICT, related_name='articles')
   tags = models.ManyToManyField(Tag, related_name='articles', blank=True)
   
   class Meta:
