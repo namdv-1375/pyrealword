@@ -13,6 +13,7 @@ class Article(TimeStampedModel):
   content = models.TextField()
   author = models.ForeignKey(User, on_delete=models.RESTRICT, related_name='articles')
   tags = models.ManyToManyField(Tag, related_name='articles', blank=True)
+  favorited_by = models.ManyToManyField(User, related_name='favorite_articles', blank=True)
   
   class Meta:
     ordering = ['-created_at']

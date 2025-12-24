@@ -1,13 +1,17 @@
-from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
+from rest_framework.decorators import action
+from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
+from django.db.models import Q
 from articles.models import Article
 from .serializers import ArticleSerializer
+from .permissions import IsAuthorOrReadOnly
 
 class ArticleViewSet(viewsets.ModelViewSet):
   serializer_class = ArticleSerializer
   lookup_field = 'slug'
-  permission_classes = [IsAuthenticatedOrReadOnly]
+  permission_classes = [IsAuthorOrReadOnly]
   
   def get_object(self):
     slug = self.kwargs.get('slug')
@@ -15,7 +19,52 @@ class ArticleViewSet(viewsets.ModelViewSet):
     return obj
   
   def get_queryset(self):
-    return Article.objects.all()
+    queryset = Article.objects.all()
+    
+    tag = self.request.query_params.get('tag', None)
+    if tag:
+      queryset = queryset.filter(tags__name=tag)
+    
+    author = self.request.query_params.get('author', None)
+    if author:
+      queryset = queryset.filter(author__username=author)
+    
+    return queryset
   
   def perform_create(self, serializer):
     serializer.save(author=self.request.user)
+  
+  @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+  def favorite(self, request, slug=None):
+    article = self.get_object()
+    user = request.user
+    
+    if article.favorited_by.filter(pk=user.pk).exists():
+      return Response(
+        {"detail": "This article is already favorited."},
+        status=status.HTTP_400_BAD_REQUEST
+      )
+    
+    article.favorited_by.add(user)
+    return Response(
+      {"detail": "Article added to favorites successfully."},
+      status=status.HTTP_201_CREATED
+    )
+  
+  @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
+  def unfavorite(self, request, slug=None):
+    article = self.get_object()
+    user = request.user
+    
+    if not article.favorited_by.filter(pk=user.pk).exists():
+      return Response(
+        {"detail": "This article is not in your favorites."},
+        status=status.HTTP_400_BAD_REQUEST
+      )
+    
+    article.favorited_by.remove(user)
+    return Response(
+      {"detail": "Article removed from favorites successfully."},
+      status=status.HTTP_204_NO_CONTENT
+    )
+

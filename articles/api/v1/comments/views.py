@@ -1,12 +1,13 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
+from rest_framework.permissions import IsAuthenticatedOrReadOnly, IsAuthenticated
 from django.shortcuts import get_object_or_404
 from articles.models import Comment, Article
 from .serializers import CommentSerializer
+from ..permissions import IsAuthorOrReadOnly
 
 class CommentViewSet(viewsets.ModelViewSet):
   serializer_class = CommentSerializer
-  permission_classes = [IsAuthenticatedOrReadOnly]
+  permission_classes = [IsAuthorOrReadOnly]
   
   def get_object(self):
     pk = self.kwargs.get('pk')
