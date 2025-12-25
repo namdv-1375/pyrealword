@@ -27,7 +27,8 @@ class Comment(TimeStampedModel):
   
   def save(self, *args, **kwargs):
     if not self.slug:
-      self.slug = slugify(self.content[:50])
+      base_slug = slugify(self.content[:50])
+      self.slug = f"{base_slug}-{str(self.id)[:8]}"
     super().save(*args, **kwargs)
 
   def __str__(self):

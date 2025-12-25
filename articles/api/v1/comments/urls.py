@@ -6,7 +6,7 @@ urlpatterns = [
         'get': 'list',
         'post': 'create'
     }), name='article-comments-list'),
-    path('<int:pk>/', CommentViewSet.as_view({
+    path('<uuid:pk>/', CommentViewSet.as_view({
         'get': 'retrieve',
         'put': 'update',
         'patch': 'partial_update',
