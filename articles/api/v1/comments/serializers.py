@@ -12,14 +12,15 @@ class CommentSerializer(serializers.ModelSerializer):
     fields = ['id', 'article', 'author', 'content', 'slug', 'created_at', 'updated_at', 'can_edit', 'can_delete']
     read_only_fields = ['article', 'slug']
   
-  def get_can_edit(self, obj):
+  def __is_comment_author(self, obj):
     request = self.context.get('request')
     if not request or not request.user.is_authenticated:
       return False
+
     return obj.author == request.user
   
+  def get_can_edit(self, obj):
+    return self.__is_comment_author(obj)
+  
   def get_can_delete(self, obj):
-    request = self.context.get('request')
-    if not request or not request.user.is_authenticated:
-      return False
-    return obj.author == request.user
+    return self.__is_comment_author(obj)

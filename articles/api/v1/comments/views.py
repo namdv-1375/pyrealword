@@ -29,13 +29,6 @@ class CommentViewSet(viewsets.ModelViewSet):
   
   def destroy(self, request, *args, **kwargs):
     instance = self.get_object()
-    
-    if instance.author != request.user:
-      return Response(
-        {'detail': 'You do not have permission to delete this comment.'},
-        status=status.HTTP_403_FORBIDDEN
-      )
-    
     self.perform_destroy(instance)
     return Response(
       {'detail': 'Comment deleted successfully.'},
