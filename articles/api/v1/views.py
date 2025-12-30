@@ -67,4 +67,38 @@ class ArticleViewSet(viewsets.ModelViewSet):
       {"detail": "Article removed from favorites successfully."},
       status=status.HTTP_204_NO_CONTENT
     )
+  
+  @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+  def like(self, request, slug=None):
+    article = self.get_object()
+    user = request.user
+    
+    if article.liked_by.filter(pk=user.pk).exists():
+      return Response(
+        {"detail": "You have already liked this article."},
+        status=status.HTTP_400_BAD_REQUEST
+      )
+    
+    article.liked_by.add(user)
+    return Response(
+      {"detail": "Article liked successfully.", "likes_count": article.liked_by.count()},
+      status=status.HTTP_201_CREATED
+    )
+  
+  @action(detail=True, methods=['delete'], permission_classes=[IsAuthenticated])
+  def unlike(self, request, slug=None):
+    article = self.get_object()
+    user = request.user
+    
+    if not article.liked_by.filter(pk=user.pk).exists():
+      return Response(
+        {"detail": "You have not liked this article."},
+        status=status.HTTP_400_BAD_REQUEST
+      )
+    
+    article.liked_by.remove(user)
+    return Response(
+      {"detail": "Article unliked successfully.", "likes_count": article.liked_by.count()},
+      status=status.HTTP_204_NO_CONTENT
+    )
 
